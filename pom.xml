@@ -28,13 +28,33 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
+    <profiles>
+        <profile>
+            <id>jetty</id>
+            <dependencies>
+                <dependency>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-web</artifactId>
+                    <exclusions>
+                        <exclusion>
+                            <groupId>org.springframework.boot</groupId>
+                            <artifactId>spring-boot-starter-tomcat</artifactId>
+                        </exclusion>
+                    </exclusions>
+                </dependency>
+                <dependency>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-jetty</artifactId>
+                </dependency>
+            </dependencies>                
+        </profile>
+    </profiles>
 
     <build>
         <plugins>
@@ -52,19 +72,17 @@
                     <!-- to monitoring by visualvm-->
                     <!--"-Dcom.sun.management.jmxremote",  "-Dcom.sun.management.jmxremote.port=9010", "-Dcom.sun.management.jmxremote.local.only=false", "-Dcom.sun.management.jmxremote.authenticate=false", "-Dcom.sun.management.jmxremote.ssl=false",--> 
                     <!--"-Xmx1536m", "-Xms1536m",-->
-                    <entryPoint>["java", "-Xmx768m", "-Xms768m", "-jar", "/${project.build.finalName}.jar"]</entryPoint>
+                    <entryPoint>["./run.sh", "/${project.build.finalName}.jar"]</entryPoint>
                     <resources>
                         <resource>
                             <targetPath>/</targetPath>
                             <directory>${project.build.directory}</directory>
                             <include>${project.build.finalName}.jar</include>
                         </resource>
-                    </resources>
-		    <resources>
                         <resource>
                             <targetPath>/</targetPath>
-                            <directory>${project.build.directory}</directory>
-                            <include>${project.build.finalName}.jar</include>
+                            <directory>${project.basedir}/src/main/sh</directory>
+                            <include>run.sh</include>
                         </resource>
                     </resources>
                 </configuration>
