@@ -1,18 +1,21 @@
 #!/bin/bash
-
 export DOCKER_MEMORY=512m
-export JAVA_OPTS='-Xmx384m -Xms384m'
-
+export JAVA_OPTS='-Xmx386m -Xms386m'
+#export TEST_TIME=1M
+export TEST_TIME=5M
+export USERS_COUNT=100
 #metodo que executa o teste
 executa_teste()
 {
 	THREADS=$1
 	QUEUE_SIZE=$2
-	echo "Executando para THREADS=$THREADS e QUEUE_SIZE=$QUEUE_SIZE"
-        echo docker run -d -m $DOCKER_MEMORY --cpuset-cpus="2" --name test -p8080:8080 -e JAVA_OPTS="$JAVA_OPTS" test_request_spring_boot --server.tomcat.max-threads=$THREADS --server.tomcat.accept-count=$QUEUE_SIZE
-	docker run -d -m $DOCKER_MEMORY --cpuset-cpus="2" --name test -p8080:8080 -e JAVA_OPTS="$JAVA_OPTS" test_request_spring_boot --server.tomcat.max-threads=$THREADS --server.tomcat.accept-count=$QUEUE_SIZE
+	echo "Executing  for THREADS=$THREADS e QUEUE_SIZE=$QUEUE_SIZE"
+        docker run -d -m $DOCKER_MEMORY --cpuset-cpus="2" --name test -p8080:8080 -e JAVA_OPTS="$JAVA_OPTS" test_request_spring_boot --server.tomcat.max-threads=$THREADS --server.tomcat.accept-count=$QUEUE_SIZE
 	sleep 10
-	siege -c100 -t 1M --log=./test.log http://localhost:8080/test --mark="t($THREADS)q($QUEUE_SIZE)"
+        MARK="t$THREADS"
+        MARK+="_q"
+        MARK+=$QUEUE_SIZE
+	siege -c$USERS_COUNT -t $TEST_TIME --log=./test.log http://localhost:8080/test --mark="$MARK" > ./$MARK.log 2>&1
 	docker kill test
 	docker rm test
 }
@@ -26,14 +29,11 @@ docker rmi test_request_spring_boot
 #copile java and builder docker image
 mvn clean package docker:build
 
-#primeiro teste
-executa_teste 10 5
-executa_teste 20 10
-executa_teste 30 15
-executa_teste 40 20
-executa_teste 50 25
-executa_teste 60 30
-executa_teste 70 35
-executa_teste 80 40
-executa_teste 90 45
-executa_teste 100 50
+#testing change thead pool end queue size
+for iThread in 10 25 50 75 100
+do
+    for iQueue in 10 25 50 75 100
+    do
+        executa_teste $iThread $iQueue
+    done
+done
